@@ -1,21 +1,14 @@
 // src/Service/MovieService.ts
 import axios from "axios";
-import type { Movie } from "../types/movie";
+import type { MovieResponse } from "../types/movie";
 
 const BASE_URL = "https://api.themoviedb.org/3";
 const TOKEN = import.meta.env.VITE_TMDB_TOKEN;
 
-interface MovieResponse {
-  results: Movie[];
-  page: number;
-  total_pages: number;
-  total_results: number;
-}
-
 export const MovieService = async (
   query: string,
   page = 1
-): Promise<Movie[]> => {
+): Promise<MovieResponse> => {
   const url = `${BASE_URL}/search/movie`;
 
   const response = await axios.get<MovieResponse>(url, {
@@ -31,5 +24,5 @@ export const MovieService = async (
     },
   });
 
-  return response.data.results;
+  return response.data;
 };
