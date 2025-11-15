@@ -10,16 +10,19 @@ import ErrorMessage from "../ErrorMessage/ErrorMessage";
 import Loader from "../Loader/Loader";
 import MovieModal from "../MovieModal/MovieModal";
 import { MovieService } from "../../services/movieService";
-import type { MovieResponse, Movie } from "../../types/movie";
+import type { MovieResponse } from "../../services/movieService";
+import type { Movie } from "../../types/movie";
 
 export default function App() {
   const [selectedMovie, setSelectedMovie] = useState<Movie | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [page, setPage] = useState(1);
 
-  const { data, isLoading, error } = useQuery<MovieResponse>({
+  const { data, isLoading, isError, isSuccess } = useQuery<MovieResponse>({
     queryKey: ["movie", searchQuery, page],
     queryFn: () => MovieService(searchQuery, page),
+    placeholderData: (prev) => prev,
+
     enabled: searchQuery !== "",
   });
 
@@ -27,10 +30,10 @@ export default function App() {
   const totalPages = data?.total_pages ?? 0;
 
   useEffect(() => {
-    if (!isLoading && data && data.results.length === 0) {
+    if (isSuccess && data?.results.length === 0) {
       toast.error("No movies found for your request.");
     }
-  }, [data, isLoading]);
+  }, [isSuccess, data]);
 
   const handleSearch = (query: string) => {
     setSearchQuery(query);
@@ -42,7 +45,7 @@ export default function App() {
       <SearchBar onSubmit={handleSearch} />
       <Toaster position="top-center" />
       {isLoading && <Loader />}
-      {error && <ErrorMessage />}
+      {isError && <ErrorMessage />}
       {totalPages > 1 && (
         <ReactPaginate
           pageCount={totalPages}
@@ -56,7 +59,9 @@ export default function App() {
           previousLabel="←"
         />
       )}
-      <MovieGrid movies={movies || []} onSelect={setSelectedMovie} />
+      {movies.length > 0 && (
+        <MovieGrid movies={movies} onSelect={setSelectedMovie} />
+      )}
       {selectedMovie && (
         <MovieModal
           movie={selectedMovie}
